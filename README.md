@@ -6,7 +6,7 @@
 ## Download
 1. Start Warzone 2100. Click **Options**
 2. Click "Open Configuration Directory"
-3. Download [`📦9c-BossFight_L.wz`](https://github.com/aco4/WZmodBossFight/raw/refs/heads/master/map/9c-BossFight_L.wz). Put in `📁maps/`
+3. Download [`📦9c-BossFight_L.wz`](https://github.com/aco4/WZmodBossFight/raw/refs/heads/main/map/9c-BossFight_L.wz). Put in `📁maps/`
 4. Download [`📦BossFightMod.zip`](https://github.com/aco4/WZmodBossFight/releases/latest). Put in `📁mods/4.6.2/autoload/`
 5. Restart Warzone 2100
 
