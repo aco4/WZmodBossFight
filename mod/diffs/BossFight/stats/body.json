@@ -9,7 +9,7 @@
 		"hitpoints": 852,
 		"id": "boss3x_tiger",
 		"model": "boss3x_tiger.pie",
-		"name": "Boss Tiger",
+		"name": "Boss Tiger 3x",
 		"powerOutput": 18000,
 		"propulsionExtraModels": {
 			"boss3x_tracks": {
@@ -30,7 +30,7 @@
 		"hitpoints": 2556,
 		"id": "boss9x_tiger",
 		"model": "boss9x_tiger.pie",
-		"name": "Boss Tiger",
+		"name": "Boss Tiger 9x",
 		"powerOutput": 18000,
 		"propulsionExtraModels": {
 			"boss9x_tracks": {
@@ -51,7 +51,7 @@
 		"hitpoints": 3150,
 		"id": "boss9x_wyvern",
 		"model": "boss9x_wyvern.pie",
-		"name": "Boss Wyvern",
+		"name": "Boss Wyvern 9x",
 		"powerOutput": 25000,
 		"propulsionExtraModels": {
 			"boss9x_tracks": {

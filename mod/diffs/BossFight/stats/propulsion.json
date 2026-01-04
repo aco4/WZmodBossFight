@@ -6,8 +6,8 @@
 		"hitpointPctOfBody": 300,
 		"id": "boss3x_tracks",
 		"model": "boss3x_tracks.pie",
-		"name": "Boss Tracks",
-		"speed": 450,
+		"name": "Boss Tracks 3x",
+		"speed": 125,
 		"spinAngle": 65,
 		"type": "Tracked",
 		"weight": 650
@@ -19,8 +19,8 @@
 		"hitpointPctOfBody": 300,
 		"id": "boss9x_tracks",
 		"model": "boss9x_tracks.pie",
-		"name": "Boss Tracks",
-		"speed": 450,
+		"name": "Boss Tracks 9x",
+		"speed": 125,
 		"spinAngle": 65,
 		"type": "Tracked",
 		"weight": 650
