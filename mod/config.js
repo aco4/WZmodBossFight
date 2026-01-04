@@ -5,7 +5,7 @@ function START_TIMER_SECONDS() {
         case EASY      : return 120;
         case MEDIUM    : return 60;
         case HARD      : return 30;
-        case INSANE    : return 0;
+        case INSANE    : return 30;
     }
 }
 
@@ -32,7 +32,7 @@ function SPAWN_BOSS() {
     }
     if (botDifficulty == INSANE) {
         return (x, y) => {
-            addDroid(enemy, x, y, "Boss", "boss9x_wyvern", "boss9x_tracks", "", "", "boss9x_plasma_cannon");
+            addDroid(enemy, x, y, "Boss", "boss9x_tiger", "boss9x_tracks", "", "", "boss9x_plasma_cannon");
             addDroid(enemy, x, y, "Boss", "boss9x_wyvern", "boss9x_tracks", "", "", "boss9x_plasma_cannon");
         };
     }
@@ -69,8 +69,8 @@ function FIRE_ATTACK_PERCENT_CHANCE() {
         case SUPEREASY : return 0;
         case EASY      : return 0;
         case MEDIUM    : return 1;
-        case HARD      : return 2;
-        case INSANE    : return 3;
+        case HARD      : return 1;
+        case INSANE    : return 1;
     }
 }
 
