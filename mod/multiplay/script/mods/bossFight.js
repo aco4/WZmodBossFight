@@ -70,24 +70,27 @@ function start()
 {
 	playSound("nmedeted.ogg");
 	playSound("beacon.ogg");
-	setMissionTime(-1);
-	spawn(mapWidth >> 1, mapHeight >> 1);
-	setTimer("updateFireAttack", 1000);
-	setTimer("explodeAll", 1000);
-}
 
-function spawn(x, y)
-{
+	// Hide the mission timer
+	setMissionTime(-1);
+
+	const { x, y } = findSpawnTile();
+
+	// Spawn the droid(s)
 	hackNetOff();
 	CONFIG.SPAWN_BOSS(x, y);
 	hackNetOn();
+
+	setTimer("updateFireAttack", 1000);
+	setTimer("explodeAll", 1000);
 }
 
 function updateFireAttack()
 {
 	enumDroid(enemy).forEach(droid =>
 	{
-		if (syncRandom(droid.health) < CONFIG.FIRE_ATTACK_PERCENT_CHANCE) {
+		if (syncRandom(droid.health) < CONFIG.FIRE_ATTACK_PERCENT_CHANCE)
+		{
 			warning(droid.x, droid.y);
 		}
 	});
@@ -95,7 +98,8 @@ function updateFireAttack()
 
 function warning(x, y)
 {
-	if (!getObject(x, y)) {
+	if (!getObject(x, y))
+	{
 		playSound("lasstrk.ogg");
 		addStructure("warning", enemy, x * 128, y * 128);
 	}
@@ -134,4 +138,63 @@ function explode(x, y)
 	fireWeaponAtLoc(CONFIG.FIRE_ATTACK_WEAPON, x - 4, y + 3, enemy, true);
 	fireWeaponAtLoc(CONFIG.FIRE_ATTACK_WEAPON, x - 3, y + 4, enemy, true);
 	fireWeaponAtLoc(CONFIG.FIRE_ATTACK_WEAPON, x - 1, y + 5, enemy, true);
+}
+
+function findSpawnTile()
+{
+	const playerContinents = getPlayerContinents();
+
+	// Map center
+	const cx = mapWidth >> 1;
+	const cy = mapHeight >> 1;
+
+	for (const [x, y] of iterateSpiral(cx, cy))
+	{
+		if (playerContinents.has(MapTiles[y][x].limitedContinent))
+		{
+			return { x, y };
+		}
+	}
+
+	return { cx, cy }; // Fallback
+}
+
+function getPlayerContinents()
+{
+	const continents = new Set();
+	for (const { x, y } of startPositions)
+	{
+		continents.add(MapTiles[y][x].limitedContinent);
+	}
+	return continents;
+}
+
+function *iterateSpiral(x, y)
+{
+	let step = 1;
+	while (true)
+	{
+		for (let i = 0; i < step; i++)
+		{
+			yield [x++, y];
+			if (x >= mapWidth) return;
+		}
+		for (let i = 0; i < step; i++)
+		{
+			yield [x, y++]; // down
+			if (y >= mapHeight) return;
+		}
+		step++;
+		for (let i = 0; i < step; i++)
+		{
+			yield [x--, y]; // left
+			if (x < 0) return;
+		}
+		for (let i = 0; i < step; i++)
+		{
+			yield [x, y--]; // up
+			if (y < 0) return;
+		}
+		step++;
+	}
 }
