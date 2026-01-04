@@ -1,0 +1,22 @@
+{
+	"warning": {
+		"armour": 255,
+		"breadth": 1,
+		"buildPoints": 400,
+		"buildPower": 100,
+		"height": 1,
+		"hitpoints": 16383,
+		"id": "warning",
+		"name": "Warning",
+		"rearmPoints": 300,
+		"repairPoints": 20,
+		"resistance": 255,
+		"strength": "HARD",
+		"structureModel": [
+			"warning.pie"
+		],
+		"thermal": 255,
+		"type": "REARM PAD",
+		"width": 1
+	}
+}

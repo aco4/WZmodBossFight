@@ -1,0 +1,7 @@
+{
+	"AI": {
+		"js": "Boss.js",
+		"name": "Boss",
+		"tip": "A giant tank that spawns in the center of the map"
+	}
+}

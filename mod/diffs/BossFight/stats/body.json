@@ -1,0 +1,65 @@
+{
+	"boss3x_tiger": {
+		"armourHeat": 15,
+		"armourKinetic": 22,
+		"buildPoints": 420,
+		"buildPower": 71,
+		"class": "Droids",
+		"designable": 1,
+		"hitpoints": 852,
+		"id": "boss3x_tiger",
+		"model": "boss3x_tiger.pie",
+		"name": "Boss Tiger",
+		"powerOutput": 18000,
+		"propulsionExtraModels": {
+			"boss3x_tracks": {
+				"left": "boss3x_tracks.pie"
+			}
+		},
+		"size": "SUPER HEAVY",
+		"weaponSlots": 1,
+		"weight": 3300
+	},
+	"boss9x_tiger": {
+		"armourHeat": 15,
+		"armourKinetic": 22,
+		"buildPoints": 420,
+		"buildPower": 71,
+		"class": "Droids",
+		"designable": 1,
+		"hitpoints": 2556,
+		"id": "boss9x_tiger",
+		"model": "boss9x_tiger.pie",
+		"name": "Boss Tiger",
+		"powerOutput": 18000,
+		"propulsionExtraModels": {
+			"boss9x_tracks": {
+				"left": "boss9x_tracks.pie"
+			}
+		},
+		"size": "SUPER HEAVY",
+		"weaponSlots": 1,
+		"weight": 3300
+	},
+	"boss9x_wyvern": {
+		"armourHeat": 28,
+		"armourKinetic": 28,
+		"buildPoints": 470,
+		"buildPower": 86,
+		"class": "Droids",
+		"designable": 1,
+		"hitpoints": 3150,
+		"id": "boss9x_wyvern",
+		"model": "boss9x_wyvern.pie",
+		"name": "Boss Wyvern",
+		"powerOutput": 25000,
+		"propulsionExtraModels": {
+			"boss9x_tracks": {
+				"left": "boss9x_tracks.pie"
+			}
+		},
+		"size": "SUPER HEAVY",
+		"weaponSlots": 1,
+		"weight": 3500
+	}
+}
