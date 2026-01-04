@@ -12,11 +12,11 @@ function updateOrders()
 			return;
 		}
 
-		const targets = enumEnemyStructs();
+		const targets = enumTargets();
 		if (targets.length > 0)
 		{
 			const target = sortNearest(targets, droid.x, droid.y)[0];
-			if (Math.random() < 0.31)
+			if (Math.random() < 0.26)
 			{
 				orderDroidObj(droid, DORDER_ATTACK, target);
 			}
@@ -29,12 +29,17 @@ function updateOrders()
 	queue("updateOrders", updateDelay());
 }
 
-function enumEnemyStructs()
+function enumTargets()
 {
 	let targets = [];
 	for (const player of iterEnemies())
 	{
-		targets = targets.concat(enumStruct(player));
+		targets = targets.concat(
+			enumStruct(player, FACTORY),
+			enumStruct(player, CYBORG_FACTORY),
+			enumStruct(player, VTOL_FACTORY),
+			enumStruct(player, RESEARCH_LAB),
+		);
 	}
 	return targets;
 }
