@@ -43,6 +43,11 @@ function bossfight_eventStartLevel()
 		}
 	}
 
+	// No random shooting!
+	Object.keys(Upgrades[enemy].Sensor).forEach(key => {
+		Upgrades[enemy].Sensor[key].Range = 1;
+	});
+
 	// Fully reveal the map (like satellite uplink)
 	if (CONFIG.FULL_MAP_REVEAL)
 	{
@@ -52,7 +57,6 @@ function bossfight_eventStartLevel()
 		}
 	}
 
-	setAlliance(enemy, scavengerPlayer, true);
 	for (let player = 0; player < maxPlayers; player++)
 	{
 		setAlliance(player, scavengerPlayer, true);
@@ -77,21 +81,80 @@ function start()
 	CONFIG.SPAWN_BOSS(x, y);
 	hackNetOn();
 
+	queue("groupAddBosses", 100);
+
 	setTimer("tickRed", 6000);
 	setTimer("tickBlue", 4000);
+	setTimer("tickCrush", 4000);
 	setTimer("tickStructs", 1000);
 	setTimer("tickComponents", 2000);
-	setTimer("tickGameOver", 3000);
 	setTimer("tickExpire", 3000);
+}
+
+function groupAddBosses()
+{
+	enumDroid(enemy, DROID_WEAPON).forEach(droid =>
+	{
+		groupAdd(BOSS_GROUP, droid);
+	});
+}
+
+function eventDestroyed(object)
+{
+	if (groupSize(BOSS_GROUP) === 0)
+	{
+		// Game over
+		hackNetOff();
+		enumStruct(enemy).forEach(s => removeObject(s, false));
+		enumDroid(enemy).forEach(d => removeObject(d, true));
+		enumStruct(scavengerPlayer).forEach(s => removeObject(s, false));
+		enumDroid(scavengerPlayer).forEach(d => removeObject(d, true));
+		hackNetOn();
+	}
+
+	if (object.name === "Red Warning")
+	{
+		enumGroup(BOSS_GROUP).forEach(boss =>
+		{
+			const targets = enumRange(boss.x, boss.y, 15, ALL_PLAYERS, false).filter(object =>
+			{
+				return object.type === DROID
+					&& (object.droidType === DROID_WEAPON || object.droidType === DROID_CYBORG)
+					&& !allianceExistsBetween(enemy, object.player)
+					&& !getObject(object.x, object.y);
+			});
+
+			if (targets.length > 0)
+			{
+				const target = targets[syncRandom(targets.length)];
+				const structure = warningRed(target.x, target.y);
+				orderDroidObj(boss, DORDER_ATTACK, structure);
+			}
+		});
+	}
+}
+
+function tickCrush()
+{
+	enumGroup(BOSS_GROUP).forEach(boss =>
+	{
+		enumRange(boss.x, boss.y, 3, ALL_PLAYERS, false).forEach(object =>
+		{
+			if (object.type === STRUCTURE)
+			{
+				removeObject(object, true);
+			}
+		});
+	});
 }
 
 function tickRed()
 {
-	enumDroid(enemy, DROID_WEAPON).forEach(droid =>
+	if (countStruct("warning_red", scavengerPlayer) === 0)
 	{
-		if (syncRandom(75) > droid.health)
+		enumGroup(BOSS_GROUP).forEach(boss =>
 		{
-			const targets = enumRange(droid.x, droid.y, 15, ALL_PLAYERS, false).filter(object =>
+			const targets = enumRange(boss.x, boss.y, 15, ALL_PLAYERS, false).filter(object =>
 			{
 				return object.type === DROID
 					&& (object.droidType === DROID_WEAPON || object.droidType === DROID_CYBORG)
@@ -104,50 +167,60 @@ function tickRed()
 				const target = targets[syncRandom(targets.length)];
 				warningRed(target.x, target.y);
 			}
-		}
-	});
+		});
+	}
 }
 
 function tickBlue()
 {
-	enumDroid(enemy, DROID_WEAPON).forEach(droid =>
+	enumGroup(BOSS_GROUP).forEach(boss =>
 	{
-		if (syncRandom(50) > droid.health)
+		if (syncRandom(50) > boss.health)
 		{
-			warningBlue(droid.x + 1, droid.y - 5);
-			warningBlue(droid.x + 3, droid.y - 4);
-			warningBlue(droid.x + 4, droid.y - 3);
-			warningBlue(droid.x + 5, droid.y - 1);
+			warningBlue(boss.x + 1, boss.y - 5);
+			warningBlue(boss.x + 3, boss.y - 4);
+			warningBlue(boss.x + 4, boss.y - 3);
+			warningBlue(boss.x + 5, boss.y - 1);
 
-			warningBlue(droid.x + 5, droid.y + 1);
-			warningBlue(droid.x + 4, droid.y + 3);
-			warningBlue(droid.x + 3, droid.y + 4);
-			warningBlue(droid.x + 1, droid.y + 5);
+			warningBlue(boss.x + 5, boss.y + 1);
+			warningBlue(boss.x + 4, boss.y + 3);
+			warningBlue(boss.x + 3, boss.y + 4);
+			warningBlue(boss.x + 1, boss.y + 5);
 
-			warningBlue(droid.x - 1, droid.y - 5);
-			warningBlue(droid.x - 3, droid.y - 4);
-			warningBlue(droid.x - 4, droid.y - 3);
-			warningBlue(droid.x - 5, droid.y - 1);
+			warningBlue(boss.x - 1, boss.y - 5);
+			warningBlue(boss.x - 3, boss.y - 4);
+			warningBlue(boss.x - 4, boss.y - 3);
+			warningBlue(boss.x - 5, boss.y - 1);
 
-			warningBlue(droid.x - 5, droid.y + 1);
-			warningBlue(droid.x - 4, droid.y + 3);
-			warningBlue(droid.x - 3, droid.y + 4);
-			warningBlue(droid.x - 1, droid.y + 5);
+			warningBlue(boss.x - 5, boss.y + 1);
+			warningBlue(boss.x - 4, boss.y + 3);
+			warningBlue(boss.x - 3, boss.y + 4);
+			warningBlue(boss.x - 1, boss.y + 5);
 		}
 	});
 }
 
 function tickComponents()
 {
-	const health = Math.max(...enumDroid(enemy, DROID_WEAPON).map(d => d.health));
+	enumGroup(BOSS_GROUP).forEach(boss =>
+	{
+		{
+			// The multiplier starts at 1 and increases to M as health approaches 0
+			const M = CONFIG.BOSS_TURN_SPEED_MULTIPLIER;
+			const multiplier = 1 + (M-1)*(1 - boss.health/100);
 
-	// The multiplier starts at 1 and increases to M as health approaches 0
-	const M = CONFIG.BOSS_TURN_SPEED_MULTIPLIER;
-	const multiplier = 1 + (M-1)*(1 - health/100);
+			Upgrades[enemy].Body["Boss Tiger 3x"].Power = Stats.Body["Boss Tiger 3x"].Power * multiplier;
+			Upgrades[enemy].Body["Boss Tiger 9x"].Power = Stats.Body["Boss Tiger 9x"].Power * multiplier;
+			Upgrades[enemy].Body["Boss Wyvern 9x"].Power = Stats.Body["Boss Wyvern 9x"].Power * multiplier;
+		}
+		{
+			// The multiplier starts at 1 and increases to M as health approaches 0
+			const M = 10;
+			const multiplier = 1 + (M-1)*(1 - boss.health/100);
 
-	Upgrades[enemy].Body["Boss Tiger 3x"].Power = Stats.Body["Boss Tiger 3x"].Power * multiplier;
-	Upgrades[enemy].Body["Boss Tiger 9x"].Power = Stats.Body["Boss Tiger 9x"].Power * multiplier;
-	Upgrades[enemy].Body["Boss Wyvern 9x"].Power = Stats.Body["Boss Wyvern 9x"].Power * multiplier;
+			Upgrades[enemy].Weapon["Boss Plasma Cannon 9x"].FirePause = Stats.Weapon["Boss Plasma Cannon 9x"].FirePause / multiplier;
+		}
+	});
 }
 
 function tickStructs()
@@ -159,15 +232,7 @@ function tickStructs()
 			if (gameTime - structure.born > 2000)
 			{
 				removeObject(structure);
-				blueAttack(structure.x, structure.y);
-			}
-		}
-		else if (structure.name === "Red Warning")
-		{
-			if (gameTime - structure.born > 4000)
-			{
-				removeObject(structure);
-				redAttack(structure.x, structure.y);
+				addDroid(enemy, structure.x, structure.y, "Minion", "CyborgLightBody", "CyborgLegs", "", "", "CyborgRepair");
 			}
 		}
 	});
@@ -186,8 +251,16 @@ function tickExpire()
 
 function warningRed(x, y)
 {
-	const structure = addStructure("warning_red", scavengerPlayer, x * 128, y * 128);
-	setObjectFlag(structure, OBJECT_FLAG_UNSELECTABLE, true);
+	if (!getObject(x, y))
+	{
+		const structure = addStructure("warning_red", scavengerPlayer, x * 128, y * 128);
+		if (structure)
+		{
+			setObjectFlag(structure, OBJECT_FLAG_UNSELECTABLE, true);
+			return structure;
+		}
+	}
+	return null;
 }
 
 function warningBlue(x, y)
@@ -195,35 +268,13 @@ function warningBlue(x, y)
 	if (!getObject(x, y))
 	{
 		const structure = addStructure("warning_blue", scavengerPlayer, x * 128, y * 128);
-		setObjectFlag(structure, OBJECT_FLAG_UNSELECTABLE, true);
+		if (structure)
+		{
+			setObjectFlag(structure, OBJECT_FLAG_UNSELECTABLE, true);
+			return structure;
+		}
 	}
-}
-
-function redAttack(x, y)
-{
-	fireWeaponAtLoc("CannonSuper", x, y, enemy, true);
-}
-
-function blueAttack(x, y)
-{
-	const terrain = terrainType(x, y);
-	if (terrain !== TER_CLIFFFACE && terrain !== TER_WATER)
-	{
-		addDroid(enemy, x, y, "Minion", "CyborgLightBody", "CyborgLegs", "", "", "CyborgRepair");
-	}
-}
-
-function tickGameOver()
-{
-	if (enumDroid(enemy, DROID_WEAPON).length === 0)
-	{
-		hackNetOff();
-		enumStruct(enemy).forEach(s => removeObject(s, false));
-		enumDroid(enemy).forEach(d => removeObject(d, true));
-		enumStruct(scavengerPlayer).forEach(s => removeObject(s, false));
-		enumDroid(scavengerPlayer).forEach(d => removeObject(d, true));
-		hackNetOn();
-	}
+	return null;
 }
 
 function findSpawnTile()

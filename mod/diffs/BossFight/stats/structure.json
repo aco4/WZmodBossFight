@@ -1,6 +1,6 @@
 {
 	"warning_blue": {
-		"armour": 255,
+		"armour": 999,
 		"breadth": 1,
 		"buildPoints": 400,
 		"buildPower": 100,
@@ -20,22 +20,22 @@
 		"width": 1
 	},
 	"warning_red": {
-		"armour": 255,
+		"armour": 1,
 		"breadth": 1,
 		"buildPoints": 400,
 		"buildPower": 100,
 		"height": 1,
-		"hitpoints": 12000,
+		"hitpoints": 1,
 		"id": "warning_red",
 		"name": "Red Warning",
 		"rearmPoints": 300,
 		"repairPoints": 20,
-		"resistance": 255,
-		"strength": "HARD",
+		"resistance": 1,
+		"strength": "SOFT",
 		"structureModel": [
 			"warning_red.pie"
 		],
-		"thermal": 255,
+		"thermal": 1,
 		"type": "REARM PAD",
 		"width": 1
 	}

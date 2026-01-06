@@ -2,35 +2,35 @@ var scrollLimits = getScrollLimits();
 
 function eventStartLevel()
 {
-	queue("tickOrders", 5000);
+	queue("tickBoss", 5000);
 	setTimer("tickCyborgs", 6000);
 }
 
-function tickOrders()
+function tickBoss()
 {
 	enumDroid(me, DROID_WEAPON).forEach(droid =>
 	{
-		if (droid.order === DORDER_ATTACK && Math.random() < 0.80)
+		if (droid.order !== DORDER_ATTACK)
 		{
-			return;
-		}
-
-		const targets = enumTargets();
-		if (targets.length > 0)
-		{
-			const target = sortNearest(targets, droid.x, droid.y)[0];
-			if (Math.random() * 85 > droid.health)
+			const targets = enumStruct(scavengerPlayer, REARM_PAD).filter(structure =>
 			{
+				return structure.name === "Red Warning";
+			});
+			if (targets.length > 0)
+			{
+				const target = sortNearest(targets, droid.x, droid.y)[0];
 				orderDroidObj(droid, DORDER_ATTACK, target);
 			}
 			else
 			{
-				orderDroidLoc(droid, DORDER_SCOUT, target.x, target.y);
+				const x = Math.floor(Math.random() * mapWidth);
+				const y = Math.floor(Math.random() * mapHeight);
+				orderDroidLoc(droid, DORDER_MOVE, x, y);
 			}
 		}
 	});
 
-	queue("tickOrders", updateDelay());
+	queue("tickBoss", updateDelay());
 }
 
 function tickCyborgs()
@@ -47,27 +47,6 @@ function tickCyborgs()
 			}
 		});
 	});
-}
-
-
-// Make the droid move away from ax, ay
-function repel(droid, ax, ay, strength)
-{
-	const dx = droid.x - ax;
-	const dy = droid.y - ay;
-	const D = Math.abs(dx) + Math.abs(dy);
-	if (D === 0)
-	{
-		return;
-	}
-
-	const K = strength / D;
-	const x = droid.x + K*dx;
-	const y = droid.y + K*dy;
-	if (inScrollLimits(x, y))
-	{
-		orderDroidLoc(droid, DORDER_MOVE, x, y);
-	}
 }
 
 // Make the droid form a circle around ax, ay
@@ -88,22 +67,6 @@ function guard(droid, ax, ay, radius)
 	{
 		orderDroidLoc(droid, DORDER_MOVE, x, y);
 	}
-}
-
-function enumTargets()
-{
-	let targets = [];
-	for (const player of iterEnemies())
-	{
-		targets = targets.concat(
-			enumStruct(player, FACTORY),
-			enumStruct(player, CYBORG_FACTORY),
-			enumStruct(player, VTOL_FACTORY),
-			enumStruct(player, RESEARCH_LAB),
-			enumStruct(player, POWER_GEN),
-		);
-	}
-	return targets;
 }
 
 // Generate a random number between 1000 and 11000, with step size 100
