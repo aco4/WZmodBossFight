@@ -95,7 +95,7 @@ function isGameExpired() {
 
 function isAlive(player) {
     if (player === enemy) {
-        return countDroid(DROID_ANY, enemy);
+        return enumDroid(enemy, DROID_WEAPON).length > 0;
     }
     return countDroid(DROID_ANY, player) || enumStruct(player).length > 0;
 }

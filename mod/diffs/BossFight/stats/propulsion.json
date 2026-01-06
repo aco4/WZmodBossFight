@@ -9,6 +9,7 @@
 		"name": "Boss Tracks 3x",
 		"speed": 125,
 		"spinAngle": 65,
+		"spinSpeed": 55,
 		"type": "Tracked",
 		"weight": 650
 	},
@@ -22,6 +23,7 @@
 		"name": "Boss Tracks 9x",
 		"speed": 125,
 		"spinAngle": 65,
+		"spinSpeed": 55,
 		"type": "Tracked",
 		"weight": 650
 	}

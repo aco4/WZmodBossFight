@@ -11,16 +11,7 @@ function bossfight_eventStartLevel()
 
 	// Remove enemy objects
 	enumStruct(enemy).forEach(s => removeObject(s));
-	enumDroid(enemy).forEach(s => removeObject(s));
-
-	// Infinite oil
-	if (CONFIG.MAX_POWER)
-	{
-		for (let player = 0; player < maxPlayers; player++)
-		{
-			setPower(1000000, player);
-		}
-	}
+	enumDroid(enemy).forEach(d => removeObject(d));
 
 	// Complete all research for the enemy
 	if (playerData[enemy].difficulty !== SUPEREASY)
@@ -29,7 +20,7 @@ function bossfight_eventStartLevel()
 	}
 
 	// Set enemy experience modifier
-	setExperienceModifier(enemy, CONFIG.EXPERIENCE_MODIFIER);
+	setExperienceModifier(enemy, CONFIG.ENEMY_EXPERIENCE_MODIFIER_PERCENT);
 
 	// Set start delay timer
 	if (CONFIG.START_TIMER_SECONDS > 0)
@@ -61,6 +52,12 @@ function bossfight_eventStartLevel()
 		}
 	}
 
+	setAlliance(enemy, scavengerPlayer, true);
+	for (let player = 0; player < maxPlayers; player++)
+	{
+		setAlliance(player, scavengerPlayer, true);
+	}
+
 	hackNetOn();
 
 	queue("start", CONFIG.START_TIMER_SECONDS * 1000);
@@ -76,68 +73,157 @@ function start()
 
 	const { x, y } = findSpawnTile();
 
-	// Spawn the droid(s)
 	hackNetOff();
 	CONFIG.SPAWN_BOSS(x, y);
 	hackNetOn();
 
-	setTimer("updateFireAttack", 1000);
-	setTimer("explodeAll", 1000);
+	setTimer("tickRed", 6000);
+	setTimer("tickBlue", 4000);
+	setTimer("tickStructs", 1000);
+	setTimer("tickComponents", 2000);
+	setTimer("tickGameOver", 3000);
+	setTimer("tickExpire", 3000);
 }
 
-function updateFireAttack()
+function tickRed()
 {
-	enumDroid(enemy).forEach(droid =>
+	enumDroid(enemy, DROID_WEAPON).forEach(droid =>
 	{
-		if (syncRandom(droid.health) < CONFIG.FIRE_ATTACK_PERCENT_CHANCE)
+		if (syncRandom(75) > droid.health)
 		{
-			warning(droid.x, droid.y);
+			const targets = enumRange(droid.x, droid.y, 15, ALL_PLAYERS, false).filter(object =>
+			{
+				return object.type === DROID
+					&& (object.droidType === DROID_WEAPON || object.droidType === DROID_CYBORG)
+					&& !allianceExistsBetween(enemy, object.player)
+					&& !getObject(object.x, object.y);
+			});
+
+			if (targets.length > 0)
+			{
+				const target = targets[syncRandom(targets.length)];
+				warningRed(target.x, target.y);
+			}
 		}
 	});
 }
 
-function warning(x, y)
+function tickBlue()
+{
+	enumDroid(enemy, DROID_WEAPON).forEach(droid =>
+	{
+		if (syncRandom(50) > droid.health)
+		{
+			warningBlue(droid.x + 1, droid.y - 5);
+			warningBlue(droid.x + 3, droid.y - 4);
+			warningBlue(droid.x + 4, droid.y - 3);
+			warningBlue(droid.x + 5, droid.y - 1);
+
+			warningBlue(droid.x + 5, droid.y + 1);
+			warningBlue(droid.x + 4, droid.y + 3);
+			warningBlue(droid.x + 3, droid.y + 4);
+			warningBlue(droid.x + 1, droid.y + 5);
+
+			warningBlue(droid.x - 1, droid.y - 5);
+			warningBlue(droid.x - 3, droid.y - 4);
+			warningBlue(droid.x - 4, droid.y - 3);
+			warningBlue(droid.x - 5, droid.y - 1);
+
+			warningBlue(droid.x - 5, droid.y + 1);
+			warningBlue(droid.x - 4, droid.y + 3);
+			warningBlue(droid.x - 3, droid.y + 4);
+			warningBlue(droid.x - 1, droid.y + 5);
+		}
+	});
+}
+
+function tickComponents()
+{
+	const health = Math.max(...enumDroid(enemy, DROID_WEAPON).map(d => d.health));
+
+	// The multiplier starts at 1 and increases to M as health approaches 0
+	const M = CONFIG.BOSS_TURN_SPEED_MULTIPLIER;
+	const multiplier = 1 + (M-1)*(1 - health/100);
+
+	Upgrades[enemy].Body["Boss Tiger 3x"].Power = Stats.Body["Boss Tiger 3x"].Power * multiplier;
+	Upgrades[enemy].Body["Boss Tiger 9x"].Power = Stats.Body["Boss Tiger 9x"].Power * multiplier;
+	Upgrades[enemy].Body["Boss Wyvern 9x"].Power = Stats.Body["Boss Wyvern 9x"].Power * multiplier;
+}
+
+function tickStructs()
+{
+	enumStruct(scavengerPlayer, REARM_PAD).forEach(structure =>
+	{
+		if (structure.name === "Blue Warning")
+		{
+			if (gameTime - structure.born > 2000)
+			{
+				removeObject(structure);
+				blueAttack(structure.x, structure.y);
+			}
+		}
+		else if (structure.name === "Red Warning")
+		{
+			if (gameTime - structure.born > 4000)
+			{
+				removeObject(structure);
+				redAttack(structure.x, structure.y);
+			}
+		}
+	});
+}
+
+function tickExpire()
+{
+	enumDroid(enemy, DROID_REPAIR).forEach(droid =>
+	{
+		if (gameTime - droid.born > 60000)
+		{
+			removeObject(droid, true);
+		}
+	});
+}
+
+function warningRed(x, y)
+{
+	const structure = addStructure("warning_red", scavengerPlayer, x * 128, y * 128);
+	setObjectFlag(structure, OBJECT_FLAG_UNSELECTABLE, true);
+}
+
+function warningBlue(x, y)
 {
 	if (!getObject(x, y))
 	{
-		playSound("lasstrk.ogg");
-		addStructure("warning", enemy, x * 128, y * 128);
+		const structure = addStructure("warning_blue", scavengerPlayer, x * 128, y * 128);
+		setObjectFlag(structure, OBJECT_FLAG_UNSELECTABLE, true);
 	}
 }
 
-function explodeAll()
+function redAttack(x, y)
 {
-	enumStruct(enemy, REARM_PAD).forEach(structure =>
-	{
-		if (gameTime - structure.born > CONFIG.FIRE_ATTACK_DELAY_MILLISECONDS)
-		{
-			removeObject(structure);
-			explode(structure.x, structure.y);
-		}
-	});
+	fireWeaponAtLoc("CannonSuper", x, y, enemy, true);
 }
 
-function explode(x, y)
+function blueAttack(x, y)
 {
-	fireWeaponAtLoc(CONFIG.FIRE_ATTACK_WEAPON, x + 1, y - 5, enemy, true);
-	fireWeaponAtLoc(CONFIG.FIRE_ATTACK_WEAPON, x + 3, y - 4, enemy, true);
-	fireWeaponAtLoc(CONFIG.FIRE_ATTACK_WEAPON, x + 4, y - 3, enemy, true);
-	fireWeaponAtLoc(CONFIG.FIRE_ATTACK_WEAPON, x + 5, y - 1, enemy, true);
+	const terrain = terrainType(x, y);
+	if (terrain !== TER_CLIFFFACE && terrain !== TER_WATER)
+	{
+		addDroid(enemy, x, y, "Minion", "CyborgLightBody", "CyborgLegs", "", "", "CyborgRepair");
+	}
+}
 
-	fireWeaponAtLoc(CONFIG.FIRE_ATTACK_WEAPON, x + 5, y + 1, enemy, true);
-	fireWeaponAtLoc(CONFIG.FIRE_ATTACK_WEAPON, x + 4, y + 3, enemy, true);
-	fireWeaponAtLoc(CONFIG.FIRE_ATTACK_WEAPON, x + 3, y + 4, enemy, true);
-	fireWeaponAtLoc(CONFIG.FIRE_ATTACK_WEAPON, x + 1, y + 5, enemy, true);
-
-	fireWeaponAtLoc(CONFIG.FIRE_ATTACK_WEAPON, x - 1, y - 5, enemy, true);
-	fireWeaponAtLoc(CONFIG.FIRE_ATTACK_WEAPON, x - 3, y - 4, enemy, true);
-	fireWeaponAtLoc(CONFIG.FIRE_ATTACK_WEAPON, x - 4, y - 3, enemy, true);
-	fireWeaponAtLoc(CONFIG.FIRE_ATTACK_WEAPON, x - 5, y - 1, enemy, true);
-
-	fireWeaponAtLoc(CONFIG.FIRE_ATTACK_WEAPON, x - 5, y + 1, enemy, true);
-	fireWeaponAtLoc(CONFIG.FIRE_ATTACK_WEAPON, x - 4, y + 3, enemy, true);
-	fireWeaponAtLoc(CONFIG.FIRE_ATTACK_WEAPON, x - 3, y + 4, enemy, true);
-	fireWeaponAtLoc(CONFIG.FIRE_ATTACK_WEAPON, x - 1, y + 5, enemy, true);
+function tickGameOver()
+{
+	if (enumDroid(enemy, DROID_WEAPON).length === 0)
+	{
+		hackNetOff();
+		enumStruct(enemy).forEach(s => removeObject(s, false));
+		enumDroid(enemy).forEach(d => removeObject(d, true));
+		enumStruct(scavengerPlayer).forEach(s => removeObject(s, false));
+		enumDroid(scavengerPlayer).forEach(d => removeObject(d, true));
+		hackNetOn();
+	}
 }
 
 function findSpawnTile()
