@@ -56,26 +56,6 @@ function FULL_MAP_REVEAL() {
     return true;
 }
 
-function SPAWN_MINION() {
-    return (x, y) => {
-        return addDroid(enemy, x, y, "Minion", "CyborgLightBody", "CyborgLegs", "", "", "CyborgRepair");
-    };
-}
-
-function MINION_SPAWN_CHANCE() {
-    switch (botDifficulty) {
-        case SUPEREASY : return 20;
-        case EASY      : return 30;
-        case MEDIUM    : return 40;
-        case HARD      : return 50;
-        case INSANE    : return 60;
-    }
-}
-
-function MINION_LIFE_TIME_MILLISECONDS() {
-    return 60000;
-}
-
 function BOSS_ENGINE_SPEED_MULTIPLIER() {
     switch (botDifficulty) {
         case SUPEREASY : return 2;
