@@ -1,48 +1,19 @@
-var scrollLimits = getScrollLimits();
+let scrollLimits;
 
 function eventStartLevel()
 {
-	queue("tickBoss", 5000);
-	setTimer("tickCyborgs", 6000);
-}
-
-function tickBoss()
-{
-	enumDroid(me, DROID_WEAPON).forEach(droid =>
-	{
-		if (droid.order !== DORDER_ATTACK)
-		{
-			const targets = enumStruct(scavengerPlayer, REARM_PAD).filter(structure =>
-			{
-				return structure.name === "Red Warning";
-			});
-			if (targets.length > 0)
-			{
-				const target = sortNearest(targets, droid.x, droid.y)[0];
-				orderDroidObj(droid, DORDER_ATTACK, target);
-			}
-			else
-			{
-				const x = Math.floor(Math.random() * mapWidth);
-				const y = Math.floor(Math.random() * mapHeight);
-				orderDroidLoc(droid, DORDER_MOVE, x, y);
-			}
-		}
-	});
-
-	queue("tickBoss", updateDelay());
+	// setTimer("tickCyborgs", 6000);
 }
 
 function tickCyborgs()
 {
-	updateScrollLimits();
+	scrollLimits = getScrollLimits();
 	enumDroid(me, DROID_WEAPON).forEach(droid =>
 	{
 		enumRange(droid.x, droid.y, 8, me, false).forEach(object =>
 		{
 			if (object.type === DROID && object.droidType === DROID_REPAIR)
 			{
-				// repel(object, droid.x, droid.y, 6);
 				guard(object, droid.x, droid.y, 10);
 			}
 		});
@@ -63,50 +34,11 @@ function guard(droid, ax, ay, radius)
 	const K = radius / Math.sqrt(D);
 	const x = ax + K*dx;
 	const y = ay + K*dy;
-	if (inScrollLimits(x, y))
+	if (x > scrollLimits.x &&
+		y > scrollLimits.y &&
+		x < scrollLimits.x2 - 1 &&
+		y < scrollLimits.y2 - 1)
 	{
 		orderDroidLoc(droid, DORDER_MOVE, x, y);
 	}
-}
-
-// Generate a random number between 1000 and 11000, with step size 100
-// e.g. 1000, 1100, 1200, 1300, ...
-function updateDelay()
-{
-	const a = Math.random() * 100; // 0.00, 1.23, ..., 67.89, ..., 99.99
-	const b = Math.ceil(a);        // 0, 1, ..., 67, ..., 100
-	const c = b * 100;             // 0, 100, ..., 6700, ..., 10000
-	const d = 1000 + c;            // 1000, 1100, ..., 7700, ..., 11000
-	return d;
-}
-
-function updateScrollLimits()
-{
-	scrollLimits = getScrollLimits();
-}
-
-function inScrollLimits(x, y)
-{
-	return x > scrollLimits.x
-		&& y > scrollLimits.y
-		&& x < scrollLimits.x2 - 1
-		&& y < scrollLimits.y2 - 1;
-}
-
-function *iterEnemies()
-{
-	for (let player = 0; player < maxPlayers; player++)
-	{
-		if (player !== me && !allianceExistsBetween(me, player))
-		{
-			yield player;
-		}
-	}
-}
-
-function sortNearest(targets, x, y)
-{
-	return targets.sort((a, b) =>
-		distBetweenTwoPoints(x, y, a.x, a.y) - distBetweenTwoPoints(x, y, b.x, b.y)
-	);
 }

@@ -61,5 +61,35 @@
 		"size": "SUPER HEAVY",
 		"weaponSlots": 1,
 		"weight": 3500
+	},
+	"body_warning_red": {
+		"armourHeat": 1,
+		"armourKinetic": 1,
+		"buildPoints": 1,
+		"buildPower": 1,
+		"class": "Droids",
+		"hitpoints": 1,
+		"id": "warning_red",
+		"model": "warning_red.pie",
+		"name": "Red Warning",
+		"powerOutput": 1,
+		"size": "LIGHT",
+		"weaponSlots": 1,
+		"weight": 10000
+	},
+	"body_warning_blue": {
+		"armourHeat": 1,
+		"armourKinetic": 1,
+		"buildPoints": 1,
+		"buildPower": 1,
+		"class": "Droids",
+		"hitpoints": 1,
+		"id": "warning_blue",
+		"model": "warning_blue.pie",
+		"name": "Blue Warning",
+		"powerOutput": 1,
+		"size": "LIGHT",
+		"weaponSlots": 1,
+		"weight": 10000
 	}
 }

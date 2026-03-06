@@ -26,5 +26,13 @@
 		"spinSpeed": 55,
 		"type": "Tracked",
 		"weight": 650
+	},
+	"propulsion_warning": {
+		"buildPoints": 1,
+		"id": "warning",
+		"name": "Warning",
+		"speed": 1,
+		"type": "Legged",
+		"weight": 10000
 	}
 }

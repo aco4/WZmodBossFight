@@ -12,6 +12,8 @@ function bossfight_eventStartLevel()
 	// Remove enemy objects
 	enumStruct(enemy).forEach(s => removeObject(s));
 	enumDroid(enemy).forEach(d => removeObject(d));
+	enumStruct(scavengerPlayer).forEach(s => removeObject(s));
+	enumDroid(scavengerPlayer).forEach(d => removeObject(d));
 
 	// Complete all research for the enemy
 	if (playerData[enemy].difficulty !== SUPEREASY)
@@ -19,20 +21,22 @@ function bossfight_eventStartLevel()
 		completeAllResearch(enemy);
 	}
 
+	// Set the baseline FirePause after all research is completed
+	initialFirePause["Boss Plasma Cannon 3x"] = Upgrades[enemy].Weapon["Boss Plasma Cannon 3x"].FirePause;
+	initialFirePause["Boss Plasma Cannon 9x"] = Upgrades[enemy].Weapon["Boss Plasma Cannon 9x"].FirePause;
+
 	// Set enemy experience modifier
 	setExperienceModifier(enemy, CONFIG.ENEMY_EXPERIENCE_MODIFIER_PERCENT);
-
-	// Set start delay timer
-	if (CONFIG.START_TIMER_SECONDS > 0)
-	{
-		setMissionTime(CONFIG.START_TIMER_SECONDS);
-	}
 
 	// Multiply the range of all weapons and sensors
 	if (CONFIG.RANGE_MULTIPLIER !== 1)
 	{
 		for (let player = 0; player < maxPlayers; player++)
 		{
+			if (player === enemy)
+			{
+				continue;
+			}
 			Object.keys(Upgrades[player].Weapon).forEach(key => {
 				Upgrades[player].Weapon[key].MinRange *= CONFIG.RANGE_MULTIPLIER;
 				Upgrades[player].Weapon[key].MaxRange *= CONFIG.RANGE_MULTIPLIER;
@@ -43,11 +47,6 @@ function bossfight_eventStartLevel()
 		}
 	}
 
-	// No random shooting!
-	Object.keys(Upgrades[enemy].Sensor).forEach(key => {
-		Upgrades[enemy].Sensor[key].Range = 1;
-	});
-
 	// Fully reveal the map (like satellite uplink)
 	if (CONFIG.FULL_MAP_REVEAL)
 	{
@@ -57,6 +56,7 @@ function bossfight_eventStartLevel()
 		}
 	}
 
+	// Use scavengerPlayer as a proxy
 	for (let player = 0; player < maxPlayers; player++)
 	{
 		setAlliance(player, scavengerPlayer, true);
@@ -64,10 +64,10 @@ function bossfight_eventStartLevel()
 
 	hackNetOn();
 
-	queue("start", CONFIG.START_TIMER_SECONDS * 1000);
+	setMissionTime(CONFIG.START_TIMER_SECONDS);
 }
 
-function start()
+function bossfight_eventMissionTimeout()
 {
 	playSound("nmedeted.ogg");
 	playSound("beacon.ogg");
@@ -78,30 +78,20 @@ function start()
 	const { x, y } = findSpawnTile();
 
 	hackNetOff();
-	CONFIG.SPAWN_BOSS(x, y);
+	CONFIG.SPAWN_BOSS(x, y).forEach(boss => groupAdd(GROUP_BOSS, boss));
 	hackNetOn();
 
-	queue("groupAddBosses", 100);
-
-	setTimer("tickRed", 6000);
-	setTimer("tickBlue", 4000);
+	queue("tickRed", 100);
+	// setTimer("tickBlue", 5000);
 	setTimer("tickCrush", 4000);
-	setTimer("tickStructs", 1000);
+	// setTimer("tickMinions", 1000);
 	setTimer("tickComponents", 2000);
-	setTimer("tickExpire", 3000);
-}
-
-function groupAddBosses()
-{
-	enumDroid(enemy, DROID_WEAPON).forEach(droid =>
-	{
-		groupAdd(BOSS_GROUP, droid);
-	});
+	// setTimer("tickExpire", 3000);
 }
 
 function eventDestroyed(object)
 {
-	if (groupSize(BOSS_GROUP) === 0)
+	if (groupSize(GROUP_BOSS) === 0)
 	{
 		// Game over
 		hackNetOff();
@@ -112,169 +102,250 @@ function eventDestroyed(object)
 		hackNetOn();
 	}
 
-	if (object.name === "Red Warning")
+	if (groupSize(GROUP_WARNING_RED) === 0)
 	{
-		enumGroup(BOSS_GROUP).forEach(boss =>
-		{
-			const targets = enumRange(boss.x, boss.y, 15, ALL_PLAYERS, false).filter(object =>
-			{
-				return object.type === DROID
-					&& (object.droidType === DROID_WEAPON || object.droidType === DROID_CYBORG)
-					&& !allianceExistsBetween(enemy, object.player)
-					&& !getObject(object.x, object.y);
-			});
+		tickRed();
+	}
 
+	// Check that the boss did not lose its target (structure was destroyed but warning was not)
+	enumGroup(GROUP_BOSS).forEach(boss =>
+	{
+		if (boss.order !== DORDER_ATTACK)
+		{
+			const targets = enumGroup(GROUP_WARNING_RED);
 			if (targets.length > 0)
 			{
 				const target = targets[syncRandom(targets.length)];
-				const structure = warningRed(target.x, target.y);
-				orderDroidObj(boss, DORDER_ATTACK, structure);
+				orderDroidObj(boss, DORDER_ATTACK, target);
 			}
-		});
-	}
-}
-
-function tickCrush()
-{
-	enumGroup(BOSS_GROUP).forEach(boss =>
-	{
-		enumRange(boss.x, boss.y, 3, ALL_PLAYERS, false).forEach(object =>
-		{
-			if (object.type === STRUCTURE)
-			{
-				removeObject(object, true);
-			}
-		});
+		}
 	});
 }
 
 function tickRed()
 {
-	if (countStruct("warning_red", scavengerPlayer) === 0)
+	hackNetOff();
+	enumGroup(GROUP_BOSS).forEach(boss =>
 	{
-		enumGroup(BOSS_GROUP).forEach(boss =>
-		{
-			const targets = enumRange(boss.x, boss.y, 15, ALL_PLAYERS, false).filter(object =>
-			{
-				return object.type === DROID
-					&& (object.droidType === DROID_WEAPON || object.droidType === DROID_CYBORG)
-					&& !allianceExistsBetween(enemy, object.player)
-					&& !getObject(object.x, object.y);
-			});
+		// let R = 100 - boss.health;
+		const R = 8;
 
-			if (targets.length > 0)
-			{
-				const target = targets[syncRandom(targets.length)];
-				warningRed(target.x, target.y);
-			}
-		});
-	}
+		const target = getTarget(boss.x, boss.y, R);
+		if (!target)
+		{
+			return;
+		}
+
+		const warning = addWarningRed(target.x, target.y);
+		if (!warning)
+		{
+			return;
+		}
+
+		if (target.type === STRUCTURE)
+		{
+			orderDroidObj(boss, DORDER_ATTACK, target);
+		}
+		else
+		{
+			orderDroidObj(boss, DORDER_ATTACK, warning);
+		}
+	});
+	hackNetOn();
 }
 
 function tickBlue()
 {
-	enumGroup(BOSS_GROUP).forEach(boss =>
+	hackNetOff();
+	enumGroup(GROUP_BOSS).forEach(boss =>
 	{
-		if (syncRandom(50) > boss.health)
+		if (syncRandom(CONFIG.MINION_SPAWN_CHANCE) > boss.health)
 		{
-			warningBlue(boss.x + 1, boss.y - 5);
-			warningBlue(boss.x + 3, boss.y - 4);
-			warningBlue(boss.x + 4, boss.y - 3);
-			warningBlue(boss.x + 5, boss.y - 1);
+			tryAddWarningBlue(boss.x + 1, boss.y - 5);
+			tryAddWarningBlue(boss.x + 3, boss.y - 4);
+			tryAddWarningBlue(boss.x + 4, boss.y - 3);
+			tryAddWarningBlue(boss.x + 5, boss.y - 1);
 
-			warningBlue(boss.x + 5, boss.y + 1);
-			warningBlue(boss.x + 4, boss.y + 3);
-			warningBlue(boss.x + 3, boss.y + 4);
-			warningBlue(boss.x + 1, boss.y + 5);
+			tryAddWarningBlue(boss.x + 5, boss.y + 1);
+			tryAddWarningBlue(boss.x + 4, boss.y + 3);
+			tryAddWarningBlue(boss.x + 3, boss.y + 4);
+			tryAddWarningBlue(boss.x + 1, boss.y + 5);
 
-			warningBlue(boss.x - 1, boss.y - 5);
-			warningBlue(boss.x - 3, boss.y - 4);
-			warningBlue(boss.x - 4, boss.y - 3);
-			warningBlue(boss.x - 5, boss.y - 1);
+			tryAddWarningBlue(boss.x - 1, boss.y - 5);
+			tryAddWarningBlue(boss.x - 3, boss.y - 4);
+			tryAddWarningBlue(boss.x - 4, boss.y - 3);
+			tryAddWarningBlue(boss.x - 5, boss.y - 1);
 
-			warningBlue(boss.x - 5, boss.y + 1);
-			warningBlue(boss.x - 4, boss.y + 3);
-			warningBlue(boss.x - 3, boss.y + 4);
-			warningBlue(boss.x - 1, boss.y + 5);
+			tryAddWarningBlue(boss.x - 5, boss.y + 1);
+			tryAddWarningBlue(boss.x - 4, boss.y + 3);
+			tryAddWarningBlue(boss.x - 3, boss.y + 4);
+			tryAddWarningBlue(boss.x - 1, boss.y + 5);
 		}
 	});
+	hackNetOn();
+}
+
+function tickCrush()
+{
+	hackNetOff();
+	enumGroup(GROUP_BOSS).forEach(boss =>
+	{
+		enumRange(boss.x, boss.y, 3, ALL_PLAYERS, false).forEach(object =>
+		{
+			if (object.damageable !== false && object.player !== enemy && object.player !== scavengerPlayer)
+			{
+				removeObject(object, true);
+			}
+		});
+	});
+	hackNetOn();
+}
+
+function tickMinions()
+{
+	hackNetOff();
+	enumGroup(GROUP_WARNING_BLUE).forEach(object =>
+	{
+		if (gameTime - object.born > 2000)
+		{
+			CONFIG.SPAWN_MINION(object.x, object.y);
+			removeObject(object);
+		}
+	});
+	hackNetOn();
 }
 
 function tickComponents()
 {
-	enumGroup(BOSS_GROUP).forEach(boss =>
+	hackNetOff();
+	enumGroup(GROUP_BOSS).forEach(boss =>
 	{
 		{
-			// The multiplier starts at 1 and increases to M as health approaches 0
-			const M = CONFIG.BOSS_TURN_SPEED_MULTIPLIER;
+			// The multiplier starts at 1 and increases to M as health approaches 0%
+			const M = CONFIG.BOSS_ENGINE_SPEED_MULTIPLIER;
 			const multiplier = 1 + (M-1)*(1 - boss.health/100);
-
 			Upgrades[enemy].Body["Boss Tiger 3x"].Power = Stats.Body["Boss Tiger 3x"].Power * multiplier;
 			Upgrades[enemy].Body["Boss Tiger 9x"].Power = Stats.Body["Boss Tiger 9x"].Power * multiplier;
 			Upgrades[enemy].Body["Boss Wyvern 9x"].Power = Stats.Body["Boss Wyvern 9x"].Power * multiplier;
 		}
 		{
-			// The multiplier starts at 1 and increases to M as health approaches 0
-			const M = 10;
+			// The multiplier starts at 1 and increases to M as health approaches 0%
+			const M = CONFIG.BOSS_RELOAD_RATE_MULTIPLIER;
 			const multiplier = 1 + (M-1)*(1 - boss.health/100);
-
-			Upgrades[enemy].Weapon["Boss Plasma Cannon 9x"].FirePause = Stats.Weapon["Boss Plasma Cannon 9x"].FirePause / multiplier;
+			Upgrades[enemy].Weapon["Boss Plasma Cannon 3x"].FirePause = initialFirePause["Boss Plasma Cannon 3x"] / multiplier;
+			Upgrades[enemy].Weapon["Boss Plasma Cannon 9x"].FirePause = initialFirePause["Boss Plasma Cannon 9x"] / multiplier;
 		}
 	});
-}
-
-function tickStructs()
-{
-	enumStruct(scavengerPlayer, REARM_PAD).forEach(structure =>
-	{
-		if (structure.name === "Blue Warning")
-		{
-			if (gameTime - structure.born > 2000)
-			{
-				removeObject(structure);
-				addDroid(enemy, structure.x, structure.y, "Minion", "CyborgLightBody", "CyborgLegs", "", "", "CyborgRepair");
-			}
-		}
-	});
+	hackNetOn();
 }
 
 function tickExpire()
 {
+	hackNetOff();
 	enumDroid(enemy, DROID_REPAIR).forEach(droid =>
 	{
-		if (gameTime - droid.born > 60000)
+		if (gameTime - droid.born > CONFIG.MINION_LIFE_TIME_MILLISECONDS)
 		{
 			removeObject(droid, true);
 		}
 	});
+	hackNetOn();
 }
 
-function warningRed(x, y)
+function tryAddWarningBlue(x, y)
 {
-	if (!getObject(x, y))
+	if (x > 0 && y > 0 && x < mapWidth && y < mapWidth)
 	{
-		const structure = addStructure("warning_red", scavengerPlayer, x * 128, y * 128);
-		if (structure)
+		const t = terrainType(x, y);
+		if (t !== TER_CLIFFFACE && t !== TER_WATER)
 		{
-			setObjectFlag(structure, OBJECT_FLAG_UNSELECTABLE, true);
-			return structure;
+			addWarningBlue(x, y);
 		}
 	}
-	return null;
 }
 
-function warningBlue(x, y)
+function getTarget(x, y, initialRadius)
 {
-	if (!getObject(x, y))
+	let radius = initialRadius;
+	let targets = searchTargets(x, y, radius);
+
+	while (targets.length === 0 && radius < mapRadius)
 	{
-		const structure = addStructure("warning_blue", scavengerPlayer, x * 128, y * 128);
-		if (structure)
+		radius += 3;
+		targets = searchTargets(x, y, radius);
+	}
+
+	return targets[syncRandom(targets.length)];
+}
+
+function searchTargets(x, y, radius)
+{
+	return enumRange(x, y, radius, ALL_PLAYERS, false).filter(object =>
+	{
+		return object.type !== FEATURE
+			&& object.player !== scavengerPlayer
+			&& object.player !== enemy
+			&& !allianceExistsBetween(enemy, object.player)
+			&& object.isFlying !== true;
+	});
+}
+
+function anyVTOL()
+{
+	for (let player = 0; player < maxPlayers; player++)
+	{
+		if (enumDroid(player, DROID_WEAPON).some(a => a.isVTOL))
 		{
-			setObjectFlag(structure, OBJECT_FLAG_UNSELECTABLE, true);
-			return structure;
+			return true;
 		}
 	}
-	return null;
+	return false;
+}
+
+function addWarningRed(x, y)
+{
+	let object = null;
+
+	if (getObject(x, y) || anyVTOL())
+	{
+		object = addDroid(scavengerPlayer, x, y, "Red Warning", "body_warning_red", "propulsion_warning", "", "", "weapon_warning");
+	}
+	else
+	{
+		object = addStructure("warning_red", scavengerPlayer, x * 128, y * 128);
+	}
+
+	if (!object)
+	{
+		return null;
+	}
+
+	groupAdd(GROUP_WARNING_RED, object);
+	setObjectFlag(object, OBJECT_FLAG_UNSELECTABLE, true);
+	return object;
+}
+
+function addWarningBlue(x, y)
+{
+	let object = null;
+
+	if (getObject(x, y) || anyVTOL())
+	{
+		object = addDroid(scavengerPlayer, x, y, "Blue Warning", "body_warning_blue", "propulsion_warning", "", "", "weapon_warning");
+	}
+	else
+	{
+		object = addStructure("warning_blue", scavengerPlayer, x * 128, y * 128);
+	}
+
+	if (!object)
+	{
+		return null;
+	}
+
+	groupAdd(GROUP_WARNING_BLUE, object);
+	setObjectFlag(object, OBJECT_FLAG_UNSELECTABLE, true);
+	return object;
 }
 
 function findSpawnTile()
