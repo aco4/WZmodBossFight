@@ -2,39 +2,39 @@
 function START_TIMER_SECONDS() {
     switch (botDifficulty) {
         case SUPEREASY : return 180;
-        case EASY      : return 120;
-        case MEDIUM    : return 60;
-        case HARD      : return 30;
-        case INSANE    : return 30;
+        case EASY      : return 150;
+        case MEDIUM    : return 120;
+        case HARD      : return 90;
+        case INSANE    : return 60;
     }
 }
 
 function SPAWN_BOSS() {
     if (botDifficulty == SUPEREASY) {
-        return (x, y) => {
-            addDroid(enemy, x, y, "Boss", "boss3x_tiger", "boss3x_tracks", "", "", "boss3x_plasma_cannon");
-        };
+        return (x, y) => [
+            addDroid(enemy, x, y, "Boss", "boss3x_tiger", "boss3x_tracks", "", "", "boss3x_plasma_cannon"),
+        ];
     }
     if (botDifficulty == EASY) {
-        return (x, y) => {
-            addDroid(enemy, x, y, "Boss", "boss3x_tiger", "boss3x_tracks", "", "", "boss3x_plasma_cannon");
-        };
+        return (x, y) => [
+            addDroid(enemy, x, y, "Boss", "boss3x_tiger", "boss3x_tracks", "", "", "boss3x_plasma_cannon"),
+        ];
     }
     if (botDifficulty == MEDIUM) {
-        return (x, y) => {
-            addDroid(enemy, x, y, "Boss", "boss9x_tiger", "boss9x_tracks", "", "", "boss9x_plasma_cannon");
-        };
+        return (x, y) => [
+            addDroid(enemy, x, y, "Boss", "boss9x_tiger", "boss9x_tracks", "", "", "boss9x_plasma_cannon"),
+        ];
     }
     if (botDifficulty == HARD) {
-        return (x, y) => {
-            addDroid(enemy, x, y, "Boss", "boss9x_wyvern", "boss9x_tracks", "", "", "boss9x_plasma_cannon");
-        };
+        return (x, y) => [
+            addDroid(enemy, x, y, "Boss", "boss9x_wyvern", "boss9x_tracks", "", "", "boss9x_plasma_cannon"),
+        ];
     }
     if (botDifficulty == INSANE) {
-        return (x, y) => {
-            addDroid(enemy, x, y, "Boss", "boss9x_tiger", "boss9x_tracks", "", "", "boss9x_plasma_cannon");
-            addDroid(enemy, x, y, "Boss", "boss9x_wyvern", "boss9x_tracks", "", "", "boss9x_plasma_cannon");
-        };
+        return (x, y) => [
+            addDroid(enemy, x, y, "Boss", "boss3x_tiger", "boss3x_tracks", "", "", "boss3x_plasma_cannon"),
+            addDroid(enemy, x, y, "Boss", "boss9x_wyvern", "boss9x_tracks", "", "", "boss9x_plasma_cannon"),
+        ];
     }
 }
 
@@ -56,30 +56,22 @@ function FULL_MAP_REVEAL() {
     return true;
 }
 
-function MAX_POWER() {
-    return false;
-}
-
-function FIRE_ATTACK_DELAY_MILLISECONDS() {
-    return 7000;
-}
-
-function FIRE_ATTACK_PERCENT_CHANCE() {
+function BOSS_ENGINE_SPEED_MULTIPLIER() {
     switch (botDifficulty) {
-        case SUPEREASY : return 0;
-        case EASY      : return 0;
-        case MEDIUM    : return 1;
-        case HARD      : return 1;
-        case INSANE    : return 1;
+        case SUPEREASY : return 2;
+        case EASY      : return 3;
+        case MEDIUM    : return 4;
+        case HARD      : return 5;
+        case INSANE    : return 6;
     }
 }
 
-function FIRE_ATTACK_WEAPON() {
+function BOSS_RELOAD_RATE_MULTIPLIER() {
     switch (botDifficulty) {
-        case SUPEREASY : return "Bomb1-VTOL-LtHE";
-        case EASY      : return "Bomb1-VTOL-LtHE";
-        case MEDIUM    : return "Bomb3-VTOL-LtINC";
-        case HARD      : return "Bomb4-VTOL-HvyINC";
-        case INSANE    : return "Bomb5-VTOL-Plasmite";
+        case SUPEREASY : return 1;
+        case EASY      : return 1;
+        case MEDIUM    : return 2;
+        case HARD      : return 3;
+        case INSANE    : return 4;
     }
 }

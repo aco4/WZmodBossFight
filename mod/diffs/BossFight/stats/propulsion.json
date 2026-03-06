@@ -9,6 +9,7 @@
 		"name": "Boss Tracks 3x",
 		"speed": 125,
 		"spinAngle": 65,
+		"spinSpeed": 55,
 		"type": "Tracked",
 		"weight": 650
 	},
@@ -22,7 +23,16 @@
 		"name": "Boss Tracks 9x",
 		"speed": 125,
 		"spinAngle": 65,
+		"spinSpeed": 55,
 		"type": "Tracked",
 		"weight": 650
+	},
+	"propulsion_warning": {
+		"buildPoints": 1,
+		"id": "warning",
+		"name": "Warning",
+		"speed": 1,
+		"type": "Legged",
+		"weight": 10000
 	}
 }

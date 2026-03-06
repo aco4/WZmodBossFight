@@ -1,21 +1,41 @@
 {
-	"warning": {
-		"armour": 255,
+	"warning_blue": {
+		"armour": 999,
 		"breadth": 1,
 		"buildPoints": 400,
 		"buildPower": 100,
 		"height": 1,
-		"hitpoints": 16383,
-		"id": "warning",
-		"name": "Warning",
+		"hitpoints": 12000,
+		"id": "warning_blue",
+		"name": "Blue Warning",
 		"rearmPoints": 300,
 		"repairPoints": 20,
 		"resistance": 255,
 		"strength": "HARD",
 		"structureModel": [
-			"warning.pie"
+			"warning_blue.pie"
 		],
 		"thermal": 255,
+		"type": "REARM PAD",
+		"width": 1
+	},
+	"warning_red": {
+		"armour": 1,
+		"breadth": 1,
+		"buildPoints": 400,
+		"buildPower": 100,
+		"height": 1,
+		"hitpoints": 1,
+		"id": "warning_red",
+		"name": "Red Warning",
+		"rearmPoints": 300,
+		"repairPoints": 20,
+		"resistance": 1,
+		"strength": "SOFT",
+		"structureModel": [
+			"warning_red.pie"
+		],
+		"thermal": 1,
 		"type": "REARM PAD",
 		"width": 1
 	}
