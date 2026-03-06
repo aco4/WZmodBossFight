@@ -10,6 +10,9 @@
 4. Download [`📦BossFightMod.zip`](https://github.com/aco4/WZmodBossFight/releases/latest). Put in `📁mods/4.6.2/autoload/`
 5. Restart Warzone 2100
 
+## Recommended options
+![Recommended Options](https://github.com/aco4/maps-wz2100/raw/main/recommended_options.png)
+
 ## Configuration
 Edit `📄config.js` to configure:
 - preparation time
