@@ -11,7 +11,7 @@
 5. Restart Warzone 2100
 
 ## Recommended options
-![Recommended Options](https://github.com/aco4/maps-wz2100/raw/main/recommended_options.png)
+![Recommended Options](https://raw.githubusercontent.com/aco4/WZmodBossFight/main/recommended_options.png)
 
 ## Configuration
 Edit `📄config.js` to configure:
